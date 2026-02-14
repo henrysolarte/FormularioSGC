@@ -4,7 +4,33 @@ services:
     runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://formulario-sgc-api.onrender.com
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
+
+  - type: web
+    name: formulario-sgc-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start:server
+    healthCheckPath: /api/health
+    envVars:
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        value: CHANGE_ME@gmail.com
+      - key: SMTP_PASS
+        value: CHANGE_ME_APP_PASSWORD
+      - key: EMAIL_FROM
+        value: CHANGE_ME@gmail.com
+      - key: EMAIL_TO
+        value: hsolarte@sgc.gov.co

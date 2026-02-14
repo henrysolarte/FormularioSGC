@@ -10,7 +10,13 @@ Tambien puedes hacerlo manual:
 1. Ve a https://dashboard.render.com/blueprints
 2. Click en **New Blueprint Instance**
 3. Selecciona el repo `henrysolarte/FormularioSGC` (rama `main`)
-4. Render detecta `render.yaml` y crea el servicio estatico
+4. Render detecta `render.yaml` y crea:
+   - `formulario-sgc` (frontend estatico)
+   - `formulario-sgc-api` (backend de correo)
+5. En `formulario-sgc-api` revisa y actualiza variables:
+   - `SMTP_USER`
+   - `SMTP_PASS` (App Password de Gmail)
+   - `EMAIL_FROM`
 
 ## Desarrollo local
 
