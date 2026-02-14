@@ -565,7 +565,6 @@ function App() {
             <button type="submit" className="primary" disabled={!isEditing}>Guardar</button>
             <button type="button" className="secondary" onClick={handleModify}>Modificar</button>
             <button type="button" className="primary" onClick={handleDownloadPdf}>Descargar PDF</button>
-            <button type="button" className="primary" onClick={handleSendEmail} disabled={isSending}>{isSending ? 'Enviando...' : 'Enviar por correo'}</button>
             <button type="button" className="secondary" onClick={handleReset}>Limpiar</button>
           </div>
         </form>
