@@ -18,3 +18,17 @@ Tambien puedes hacerlo manual:
 npm install
 npm run dev
 ```
+
+## Envio automatico de PDF por correo
+
+1. Crea `.env` a partir de `.env.example` y completa tus credenciales SMTP.
+2. Ejecuta:
+
+```bash
+npm install
+npm run dev
+```
+
+3. Usa el boton **Enviar por correo** en el formulario.
+
+Nota: El backend expone `POST /api/send-pdf` y envia por defecto a `hsolarte@sgc.gov.co` (variable `EMAIL_TO`).

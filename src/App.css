@@ -199,6 +199,10 @@ textarea {
   padding: 4px;
 }
 
+.hidden-file-input {
+  display: none;
+}
+
 .actions {
   margin-top: 18px;
   display: flex;
@@ -302,4 +306,13 @@ pre {
   .grid {
     grid-template-columns: 1fr;
   }
+}
+.status-message {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cddacf;
+  background: #eef5f0;
+  color: #1f4a35;
+  font-weight: 600;
 }

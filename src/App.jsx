@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import './App.css'
 import logoSindegeologico from '../images/logo.png'
@@ -27,6 +27,7 @@ const initialData = {
 }
 
 const STORAGE_KEY = 'sindegeologico_form_data'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 const buildPreviewData = (data) => ({
   ...data,
@@ -35,9 +36,12 @@ const buildPreviewData = (data) => ({
 })
 
 function App() {
+  const firstSignatureInputRef = useRef(null)
   const [formData, setFormData] = useState(initialData)
   const [resultado, setResultado] = useState(null)
   const [isEditing, setIsEditing] = useState(true)
+  const [emailStatus, setEmailStatus] = useState('')
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -54,6 +58,31 @@ function App() {
       localStorage.removeItem(STORAGE_KEY)
     }
   }, [])
+
+  useEffect(() => {
+    const yoAuto = `${formData.nombres} ${formData.apellidos}`.trim()
+    const ccAuto = formData.cc_1
+    const deAuto = formData.de_1
+
+    if (
+      formData.yo === yoAuto &&
+      formData.cc_identificado === ccAuto &&
+      formData.de_2 === deAuto &&
+      formData.cc_2 === ccAuto &&
+      formData.de_3 === deAuto
+    ) {
+      return
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      yo: yoAuto,
+      cc_identificado: ccAuto,
+      de_2: deAuto,
+      cc_2: ccAuto,
+      de_3: deAuto,
+    }))
+  }, [formData.nombres, formData.apellidos, formData.cc_1, formData.de_1, formData.yo, formData.cc_identificado, formData.de_2, formData.cc_2, formData.de_3])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -73,13 +102,31 @@ function App() {
     const reader = new FileReader()
     reader.onload = () => {
       const imageData = typeof reader.result === 'string' ? reader.result : ''
-      setFormData((prev) => ({ ...prev, [field]: imageData }))
+      setFormData((prev) => {
+        if (field === 'firma_1_image') {
+          return { ...prev, firma_1_image: imageData, firma_2_image: imageData }
+        }
+        return { ...prev, [field]: imageData }
+      })
     }
     reader.readAsDataURL(file)
   }
 
   const handleRemoveSignature = (field) => {
-    setFormData((prev) => ({ ...prev, [field]: '' }))
+    setFormData((prev) => {
+      if (field === 'firma_1_image') {
+        return { ...prev, firma_1_image: '', firma_2_image: '' }
+      }
+      return { ...prev, [field]: '' }
+    })
+  }
+
+  const openFileDialog = () => {
+    if (!firstSignatureInputRef.current) {
+      return
+    }
+    firstSignatureInputRef.current.value = ''
+    firstSignatureInputRef.current.click()
   }
 
   const handleSubmit = (event) => {
@@ -87,6 +134,7 @@ function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
     setResultado(buildPreviewData(formData))
     setIsEditing(false)
+    setEmailStatus('')
   }
 
   const handleReset = () => {
@@ -94,13 +142,14 @@ function App() {
     setResultado(null)
     localStorage.removeItem(STORAGE_KEY)
     setIsEditing(true)
+    setEmailStatus('')
   }
 
   const handleModify = () => {
     setIsEditing(true)
   }
 
-  const handleDownloadPdf = async () => {
+  const generatePdfDoc = async () => {
     const doc = new jsPDF({ unit: 'mm', format: 'letter' })
     const value = (v) => (v && v.trim() ? v : 'N/A')
     const colors = {
@@ -325,7 +374,45 @@ function App() {
       doc.text(`${pageNumber} de ${totalPages}`, page.w / 2, page.h - 6, { align: 'center' })
     }
 
+    return doc
+  }
+
+  const handleDownloadPdf = async () => {
+    const doc = await generatePdfDoc()
     doc.save('formulario-sindegeologico.pdf')
+  }
+
+  const handleSendEmail = async () => {
+    try {
+      setIsSending(true)
+      setEmailStatus('Enviando...')
+      const doc = await generatePdfDoc()
+      const dataUri = doc.output('datauristring')
+      const pdfBase64 = dataUri.split(',')[1] || ''
+
+      const response = await fetch(`${API_BASE_URL}/api/send-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pdfBase64,
+          fileName: 'formulario-sindegeologico.pdf',
+          formData,
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message || 'No se pudo enviar el correo.')
+      }
+
+      setEmailStatus(result.message || 'Correo enviado correctamente.')
+    } catch (error) {
+      setEmailStatus(error.message || 'Error enviando correo.')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
@@ -356,121 +443,134 @@ function App() {
 
         <form onSubmit={handleSubmit}>
           <fieldset className="form-fieldset" disabled={!isEditing}>
-          <h2>Datos personales</h2>
-          <div className="grid">
-            <div>
-              <label htmlFor="nombres">Nombres</label>
-              <input id="nombres" name="nombres" value={formData.nombres} onChange={handleChange} required />
+            <h2>Datos personales</h2>
+            <div className="grid">
+              <div>
+                <label htmlFor="nombres">Nombres</label>
+                <input id="nombres" name="nombres" value={formData.nombres} onChange={handleChange} required />
+              </div>
+              <div>
+                <label htmlFor="apellidos">Apellidos</label>
+                <input id="apellidos" name="apellidos" value={formData.apellidos} onChange={handleChange} required />
+              </div>
+              <div>
+                <label htmlFor="fecha_ingreso">Fecha de ingreso al SGC</label>
+                <input id="fecha_ingreso" name="fecha_ingreso" type="date" value={formData.fecha_ingreso} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="dependencia">Dependencia a donde labora</label>
+                <input id="dependencia" name="dependencia" value={formData.dependencia} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="ciudad">Ciudad</label>
+                <input id="ciudad" name="ciudad" value={formData.ciudad} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="telefono">Telefono</label>
+                <input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="extension">Extension</label>
+                <input id="extension" name="extension" value={formData.extension} onChange={handleChange} />
+              </div>
+              <div className="full">
+                <label htmlFor="correo">Direccion de correo electronico</label>
+                <input id="correo" name="correo" type="email" value={formData.correo} onChange={handleChange} />
+              </div>
             </div>
-            <div>
-              <label htmlFor="apellidos">Apellidos</label>
-              <input id="apellidos" name="apellidos" value={formData.apellidos} onChange={handleChange} required />
-            </div>
-            <div>
-              <label htmlFor="fecha_ingreso">Fecha de ingreso al SGC</label>
-              <input id="fecha_ingreso" name="fecha_ingreso" type="date" value={formData.fecha_ingreso} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="dependencia">Dependencia a donde labora</label>
-              <input id="dependencia" name="dependencia" value={formData.dependencia} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="ciudad">Ciudad</label>
-              <input id="ciudad" name="ciudad" value={formData.ciudad} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="telefono">Telefono</label>
-              <input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="extension">Extension</label>
-              <input id="extension" name="extension" value={formData.extension} onChange={handleChange} />
-            </div>
-            <div className="full">
-              <label htmlFor="correo">Direccion de correo electronico</label>
-              <input id="correo" name="correo" type="email" value={formData.correo} onChange={handleChange} />
-            </div>
-          </div>
 
-          <p>
-            Si es aceptada mi afiliacion, me comprometo a respetar y acatar los
-            estatutos de SINDEGEOLOGICO, las actividades y decisiones de sus cuerpos
-            directivos, los principios que rigen la actividad y el programa de
-            defensa en favor de sus asociados.
-          </p>
+            <p>
+              Si es aceptada mi afiliacion, me comprometo a respetar y acatar los
+              estatutos de SINDEGEOLÓGICO, las actividades y decisiones de sus cuerpos
+              directivos, los principios que rigen la actividad y el programa de
+              defensa en favor de sus asociados.
+            </p>
 
-          <div className="grid">
-            <div className="full">
-              <label htmlFor="firma_1_file">En constancia firmo (subir firma)</label>
-              <input id="firma_1_file" name="firma_1_file" type="file" accept="image/*" onChange={(event) => handleSignatureUpload('firma_1_image', event)} />
-              {formData.firma_1_image && (
-                <div className="signature-preview-wrap">
-                  <img className="signature-preview" src={formData.firma_1_image} alt="Firma afiliacion" />
-                  <button type="button" className="secondary" onClick={() => handleRemoveSignature('firma_1_image')}>Quitar firma</button>
-                </div>
-              )}
+            <div className="grid">
+              <div className="full">
+                <label htmlFor="firma_1_file">En constancia firmo (subir firma)</label>
+                <input
+                  id="firma_1_file"
+                  name="firma_1_file"
+                  ref={firstSignatureInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden-file-input"
+                  onChange={(event) => handleSignatureUpload('firma_1_image', event)}
+                />
+                {!formData.firma_1_image && (
+                  <button type="button" className="primary" onClick={openFileDialog}>
+                    Subir firma
+                  </button>
+                )}
+                {formData.firma_1_image && (
+                  <div className="signature-preview-wrap">
+                    <img className="signature-preview" src={formData.firma_1_image} alt="Firma afiliacion" />
+                    <button type="button" className="secondary" onClick={() => handleRemoveSignature('firma_1_image')}>Quitar firma</button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label htmlFor="cc_1">C.C. No</label>
+                <input id="cc_1" name="cc_1" value={formData.cc_1} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="de_1">De</label>
+                <input id="de_1" name="de_1" value={formData.de_1} onChange={handleChange} />
+              </div>
             </div>
-            <div>
-              <label htmlFor="cc_1">C.C. No</label>
-              <input id="cc_1" name="cc_1" value={formData.cc_1} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="de_1">De</label>
-              <input id="de_1" name="de_1" value={formData.de_1} onChange={handleChange} />
-            </div>
-          </div>
 
-          <h2>Autorizacion</h2>
-          <div className="grid">
-            <div>
-              <label htmlFor="yo">Yo</label>
-              <input id="yo" name="yo" value={formData.yo} onChange={handleChange} />
+            <h2>Autorizacion</h2>
+            <div className="grid">
+              <div>
+                <label htmlFor="yo">Yo</label>
+                <input id="yo" name="yo" value={formData.yo} onChange={handleChange} readOnly />
+              </div>
+              <div>
+                <label htmlFor="cc_identificado">Identificado con C.C. No</label>
+                <input id="cc_identificado" name="cc_identificado" value={formData.cc_identificado} onChange={handleChange} readOnly />
+              </div>
+              <div>
+                <label htmlFor="de_2">De</label>
+                <input id="de_2" name="de_2" value={formData.de_2} onChange={handleChange} readOnly />
+              </div>
+              <div className="full">
+                <label htmlFor="autorizacion_texto">Autorizacion</label>
+                <textarea id="autorizacion_texto" name="autorizacion_texto" value={formData.autorizacion_texto} onChange={handleChange} />
+              </div>
+              <div className="full">
+                <label>En constancia firmo</label>
+                {formData.firma_2_image && (
+                  <div className="signature-preview-wrap">
+                    <img className="signature-preview" src={formData.firma_2_image} alt="Firma autorizacion" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label htmlFor="cc_2">C.C. No.</label>
+                <input id="cc_2" name="cc_2" value={formData.cc_2} onChange={handleChange} readOnly />
+              </div>
+              <div>
+                <label htmlFor="de_3">De</label>
+                <input id="de_3" name="de_3" value={formData.de_3} onChange={handleChange} readOnly />
+              </div>
+              <div className="full">
+                <label htmlFor="ciudad_fecha">Ciudad y fecha</label>
+                <input id="ciudad_fecha" name="ciudad_fecha" value={formData.ciudad_fecha} onChange={handleChange} />
+              </div>
             </div>
-            <div>
-              <label htmlFor="cc_identificado">Identificado con C.C. No</label>
-              <input id="cc_identificado" name="cc_identificado" value={formData.cc_identificado} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="de_2">De</label>
-              <input id="de_2" name="de_2" value={formData.de_2} onChange={handleChange} />
-            </div>
-            <div className="full">
-              <label htmlFor="autorizacion_texto">Autorizacion</label>
-              <textarea id="autorizacion_texto" name="autorizacion_texto" value={formData.autorizacion_texto} onChange={handleChange} />
-            </div>
-            <div className="full">
-              <label htmlFor="firma_2_file">En constancia firmo (subir firma)</label>
-              <input id="firma_2_file" name="firma_2_file" type="file" accept="image/*" onChange={(event) => handleSignatureUpload('firma_2_image', event)} />
-              {formData.firma_2_image && (
-                <div className="signature-preview-wrap">
-                  <img className="signature-preview" src={formData.firma_2_image} alt="Firma autorizacion" />
-                  <button type="button" className="secondary" onClick={() => handleRemoveSignature('firma_2_image')}>Quitar firma</button>
-                </div>
-              )}
-            </div>
-            <div>
-              <label htmlFor="cc_2">C.C. No.</label>
-              <input id="cc_2" name="cc_2" value={formData.cc_2} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="de_3">De</label>
-              <input id="de_3" name="de_3" value={formData.de_3} onChange={handleChange} />
-            </div>
-            <div className="full">
-              <label htmlFor="ciudad_fecha">Ciudad y fecha</label>
-              <input id="ciudad_fecha" name="ciudad_fecha" value={formData.ciudad_fecha} onChange={handleChange} />
-            </div>
-          </div>
           </fieldset>
 
           <div className="actions">
             <button type="submit" className="primary" disabled={!isEditing}>Guardar</button>
             <button type="button" className="secondary" onClick={handleModify}>Modificar</button>
             <button type="button" className="primary" onClick={handleDownloadPdf}>Descargar PDF</button>
+            <button type="button" className="primary" onClick={handleSendEmail} disabled={isSending}>{isSending ? 'Enviando...' : 'Enviar por correo'}</button>
             <button type="button" className="secondary" onClick={handleReset}>Limpiar</button>
           </div>
         </form>
 
+        {emailStatus && <p className="status-message">{emailStatus}</p>}
         {resultado && <pre>{JSON.stringify(resultado, null, 2)}</pre>}
       </div>
     </div>
@@ -478,3 +578,8 @@ function App() {
 }
 
 export default App
+
+
+
+
+
