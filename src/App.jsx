@@ -19,7 +19,7 @@ const initialData = {
   cc_identificado: '',
   de_2: '',
   autorizacion_texto:
-    'Autorizo se me descuente mensualmente el 0.5% de mi sueldo basico con destino al Sindicato de Empleados del Servicio Geologico Colombiano - SINDEGEOLOGICO, por concepto de cuotas mensuales ordinarias.',
+    'Autorizo se me descuente mensualmente el 0,5 % de mi sueldo básico con destino al Sindicato de Empleados del Servicio Geológico Colombiano - SINDEGEOLÓGICO, por concepto de cuotas mensuales ordinarias.',
   firma_2_image: '',
   cc_2: '',
   de_3: '',
@@ -286,7 +286,7 @@ function App() {
     doc.setTextColor(...colors.label)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(13)
-    doc.text('Solicitud de afiliacion SINDEGEOLOGICO', page.m + 5, y + 6.8)
+    doc.text('Solicitud de afiliación SINDEGEOLÓGICO', page.m + 5, y + 6.8)
     y += 14
 
     doc.setTextColor(...colors.text)
@@ -317,12 +317,12 @@ function App() {
     drawField('Dependencia a donde labora', formData.dependencia, page.m + half + colGap, y, half)
     y += 19
     drawField('Ciudad', formData.ciudad, page.m, y, half)
-    drawField('Telefono', formData.telefono, page.m + half + colGap, y, half)
+    drawField('Teléfono', formData.telefono, page.m + half + colGap, y, half)
     y += 19
-    drawField('Extension', formData.extension, page.m, y, half)
-    drawField('Correo electronico', formData.correo, page.m + half + colGap, y, half)
+    drawField('Extensión', formData.extension, page.m, y, half)
+    drawField('Correo electrónico', formData.correo, page.m + half + colGap, y, half)
     y += 19
-    await drawSignatureField('En constancia firmo', formData.firma_1_image, page.m, y, page.usableW)
+    await drawSignatureField('En constancia, firmo', formData.firma_1_image, page.m, y, page.usableW)
     y += 27
     drawField('C.C. No', formData.cc_1, page.m, y, half)
     drawField('De', formData.de_1, page.m + half + colGap, y, half)
@@ -334,7 +334,7 @@ function App() {
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(10)
-    doc.text('AUTORIZACION', page.m + 3, y + 4.7)
+    doc.text('AUTORIZACIÓN', page.m + 3, y + 4.7)
     y += 10
 
     drawField('Yo', formData.yo, page.m, y, half)
@@ -350,7 +350,7 @@ function App() {
     doc.setTextColor(...colors.label)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
-    doc.text('Autorizacion', page.m + 2, y + 4.2)
+    doc.text('Autorización', page.m + 2, y + 4.2)
     doc.setTextColor(...colors.text)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9.5)
@@ -358,7 +358,7 @@ function App() {
     doc.text(authLines, page.m + 2, y + 9.8)
     y += textBoxH + 3
 
-    await drawSignatureField('En constancia firmo', formData.firma_2_image, page.m, y, page.usableW)
+    await drawSignatureField('En constancia, firmo', formData.firma_2_image, page.m, y, page.usableW)
     y += 27
     drawField('C.C. No', formData.cc_2, page.m, y, half)
     drawField('De', formData.de_3, page.m + half + colGap, y, half)
@@ -434,11 +434,9 @@ function App() {
             </div>
           </div>
         </div>
-        <h1>Solicitud de afiliacion SINDEGEOLOGICO</h1>
+        <h1>Solicitud de afiliación SINDEGEOLÓGICO</h1>
         <p>
-          De manera libre y en ejercicio del derecho fundamental de ASOCIACION,
-          consagrado en el articulo 38 de la Constitucion Politica, solicito mi
-          afiliacion a SINDEGEOLOGICO.
+         De manera libre y en ejercicio del derecho fundamental de asociación, consagrado en el artículo 38 de la Constitución Política, solicito mi afiliación a SINDEGEOLÓGICO.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -458,7 +456,7 @@ function App() {
                 <input id="fecha_ingreso" name="fecha_ingreso" type="date" value={formData.fecha_ingreso} onChange={handleChange} />
               </div>
               <div>
-                <label htmlFor="dependencia">Dependencia a donde labora</label>
+                <label htmlFor="dependencia">Dependencia donde labora</label>
                 <input id="dependencia" name="dependencia" value={formData.dependencia} onChange={handleChange} />
               </div>
               <div>
@@ -466,21 +464,21 @@ function App() {
                 <input id="ciudad" name="ciudad" value={formData.ciudad} onChange={handleChange} />
               </div>
               <div>
-                <label htmlFor="telefono">Telefono</label>
+                <label htmlFor="telefono">Teléfono</label>
                 <input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} />
               </div>
               <div>
-                <label htmlFor="extension">Extension</label>
+                <label htmlFor="extension">Extensión</label>
                 <input id="extension" name="extension" value={formData.extension} onChange={handleChange} />
               </div>
               <div className="full">
-                <label htmlFor="correo">Direccion de correo electronico</label>
+                <label htmlFor="correo">Dirección de correo electrónico</label>
                 <input id="correo" name="correo" type="email" value={formData.correo} onChange={handleChange} />
               </div>
             </div>
 
             <p>
-              Si es aceptada mi afiliacion, me comprometo a respetar y acatar los
+              Si es aceptada mi afiliación, me comprometo a respetar y acatar los
               estatutos de SINDEGEOLÓGICO, las actividades y decisiones de sus cuerpos
               directivos, los principios que rigen la actividad y el programa de
               defensa en favor de sus asociados.
@@ -488,7 +486,7 @@ function App() {
 
             <div className="grid">
               <div className="full">
-                <label htmlFor="firma_1_file">En constancia firmo (subir firma)</label>
+                <label htmlFor="firma_1_file">En constancia, firmo (subir firma)</label>
                 <input
                   id="firma_1_file"
                   name="firma_1_file"
@@ -505,7 +503,7 @@ function App() {
                 )}
                 {formData.firma_1_image && (
                   <div className="signature-preview-wrap">
-                    <img className="signature-preview" src={formData.firma_1_image} alt="Firma afiliacion" />
+                    <img className="signature-preview" src={formData.firma_1_image} alt="Firma afiliación" />
                     <button type="button" className="secondary" onClick={() => handleRemoveSignature('firma_1_image')}>Quitar firma</button>
                   </div>
                 )}
@@ -520,7 +518,7 @@ function App() {
               </div>
             </div>
 
-            <h2>Autorizacion</h2>
+            <h2>Autorización</h2>
             <div className="grid">
               <div>
                 <label htmlFor="yo">Yo</label>
@@ -535,14 +533,14 @@ function App() {
                 <input id="de_2" name="de_2" value={formData.de_2} onChange={handleChange} readOnly />
               </div>
               <div className="full">
-                <label htmlFor="autorizacion_texto">Autorizacion</label>
+                <label htmlFor="autorizacion_texto">Autorización</label>
                 <textarea id="autorizacion_texto" name="autorizacion_texto" value={formData.autorizacion_texto} onChange={handleChange} />
               </div>
               <div className="full">
-                <label>En constancia firmo</label>
+                <label>En constancia, firmo</label>
                 {formData.firma_2_image && (
                   <div className="signature-preview-wrap">
-                    <img className="signature-preview" src={formData.firma_2_image} alt="Firma autorizacion" />
+                    <img className="signature-preview" src={formData.firma_2_image} alt="Firma autorización" />
                   </div>
                 )}
               </div>
@@ -577,7 +575,6 @@ function App() {
 }
 
 export default App
-
 
 
 
