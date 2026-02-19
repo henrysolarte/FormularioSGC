@@ -267,7 +267,7 @@ function App() {
     doc.setFontSize(19)
     doc.text('SINDEGEOLÓGICO', headerTextCenter, y + 11, { align: 'center' })
     doc.setFontSize(11)
-    doc.text('Cuando estamos unidos, nadie queda atrás', headerTextCenter, y + 18, { align: 'center' })
+    doc.text('Si estamos unidos, nadie queda atrás', headerTextCenter, y + 18, { align: 'center' })
     doc.setTextColor(255, 224, 161)
     doc.setFontSize(14)
     doc.text('50 Años', headerTextCenter, y + 25, { align: 'center' })
@@ -427,7 +427,7 @@ function App() {
             />
             <div className="brand-text">
               <p className="brand-name">SINDEGEOLÓGICO</p>
-              <p className="brand-slogan">Cuando estamos unidos, nadie queda atrás</p>
+              <p className="brand-slogan">Si estamos unidos, nadie queda atrás</p>
               <p className="brand-years">50 Años</p>
               <p className="brand-org">SINDICATO DE EMPLEADOS DEL SERVICIO GEOLÓGICO COLOMBIANO</p>
               <p className="brand-legal">Personería jurídica No. 001330 del 14 de mayo de 1975</p>
